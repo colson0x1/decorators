@@ -78,3 +78,47 @@ class Person {
 
 const per = new Person();
 console.log(per);
+
+/* Places where we can add Decorators besides class */
+// We need a class for any decorators we can use but
+// we don't have to add all decorators directly to the class
+
+// Decorator function
+// Which argument decorator function gets depends on where we use it!
+// If we log decorator to a property, it receives two argument
+// For instance property like title: string; which we call on a instance if we work with it
+// This will be the prototype of the object that was created but If we have a static property
+// target will refer to the constructor function state
+
+// Here we're adding any because we don't know exactly which structure this object will have
+// Second argument we get is the propertyName simply
+// That could be a string here, could of course be a symbol we don't know what we use as a property identifier
+// When logger executes is, since we never instantiate our Product, it executes basically when
+// our class definition is registered by JavaScript
+function Log(target: any, propertyName: string | Symbol) {
+  console.log('Property decorator!');
+  console.log(target, propertyName);
+}
+
+class Product {
+  @Log
+  title: string;
+  private _price: number;
+
+  set price(val: number) {
+    if (val > 0) {
+      this._price = val;
+    } else {
+      throw new Error('Invalid price - should be positive!');
+    }
+  }
+
+  constructor(t: string, p: number) {
+    this.title = t;
+    this._price = p;
+  }
+
+  getPriceWithTax(tax: number) {
+    return this._price * (1 + tax);
+  }
+}
