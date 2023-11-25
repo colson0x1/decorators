@@ -27,7 +27,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 function Logger(logString) {
+    console.log('LOGGER FACTORY');
     return function (constructor) {
+        console.log('Rendering logger');
         console.log(logString);
         console.log(constructor);
     };
@@ -40,7 +42,9 @@ function Logger(logString) {
 function WithTemplate(template, hookId) {
     // adding `_` on constructor argument of decorator signals TS that we get this
     // argument but we don't need it but we have to specify it though
+    console.log('TEMPLATE FACTORY');
     return function (constructor) {
+        console.log('Rendering template');
         const hookEl = document.getElementById(hookId);
         const p = new constructor();
         if (hookEl) {
@@ -56,6 +60,14 @@ function WithTemplate(template, hookId) {
 // We could expose this as part of the library and anyone who uses our library can
 // import this decorator function and add it to a class, to then magically
 // render some content all of a sudden
+// Note decorators functions execute in bottom-up fashion. bottom-most decorator first and
+// thereafter the decorators above it
+// Here @WithTemplate runs first and then @Logger executes
+// But decorator factories runs earlier. In the example above, 'LOGGER TEMPLATE' runs first
+// and then 'TEMPLATE FACTORY' and after that decorators functions from bottom-top
+// So the creation of actual decorator function happens in the order in which we specify
+// these factory functions But the execution of these actual decorator functions
+// then happens bottom-up
 let Person = class Person {
     constructor() {
         this.name = 'Colson';
@@ -63,6 +75,7 @@ let Person = class Person {
     }
 };
 Person = __decorate([
+    Logger('LOGGING'),
     WithTemplate('<h1>My person object</h1>', 'app')
 ], Person);
 const per = new Person();
