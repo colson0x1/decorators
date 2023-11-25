@@ -27,7 +27,33 @@ function Logger(logString: string) {
   };
 }
 
-@Logger('LOGGIN - PERSON')
+// Meta Programming - We're creating things, we're creating decorator functions,
+// which we might say have some impact on the end user
+// In the end we do render something on the screen, but we do that with a tool we
+// expose to other developers because this Decorator is such a tool which other
+// developers have to use by adding it to a class
+
+function WithTemplate(template: string, hookId: string) {
+  // adding `_` on constructor argument of decorator signals TS that we get this
+  // argument but we don't need it but we have to specify it though
+  return function (constructor: any) {
+    const hookEl = document.getElementById(hookId);
+    const p = new constructor();
+    if (hookEl) {
+      hookEl.innerHTML = template;
+      hookEl.querySelector('h1')!.textContent = p.name;
+    }
+  };
+}
+
+// @Logger('LOGGIN - PERSON')
+// We can build really advanced decorators like this which all of a sudden does some
+// magic behind the scenes. That's metaprogramming! We add some logic which we
+// could expose if this would be a third-party library we share with other users
+// We could expose this as part of the library and anyone who uses our library can
+// import this decorator function and add it to a class, to then magically
+// render some content all of a sudden
+@WithTemplate('<h1>My person object</h1>', 'app')
 class Person {
   name = 'Colson';
 
