@@ -204,3 +204,54 @@ const p2 = new Product('Book', 39);
 /* @ Advanced usecase of Decorators */
 // Some decorators for example: class decorators and method decorators actually
 // are also capable of returning something
+
+/* @ Autobind Decorator */
+// building a decorator which will automatically bind 'this' to the surrounding class,
+// or to the object this method belongs to, everytime its called no matter where we call it from
+// In Autobind, we want to make sure that we always set the 'this'
+// keyword to the object this method belongs to
+// This is a decorator function returning a descriptor object which will override the old descriptor
+// and TS will then, replace the old methods descriptor, so the old methods configuration with this
+// new configuration here, which added the extra getter layer here
+function Autobind(_: any, _2: string, descriptor: PropertyDescriptor) {
+  const originalMethod = descriptor.value;
+  const adjDescriptor: PropertyDescriptor = {
+    configurable: true,
+    enumerable: false,
+    // not using 'value' here. getter is extra logic that runs before the value is returned
+    get() {
+      // here 'this' will refer to whatever is responsible for triggering this getter method
+      // the getter method will be triggered by the concrete object to which it belongs
+      // so 'this' inside of the getter method will always refer to the object on which we defined the getter
+      // this will not be overwritten by addEventListener because the getter is like an extra layer
+      // between our function that's being executed and the object to which it belongs
+      // therefore 'this' in here will refer to the object on which we originally defined the method
+      // So we can safely bind this for the original method and ensure that now 'this' inside of the
+      // original method will also refer to the same object
+      const boundFn = originalMethod.bind(this);
+      return boundFn;
+    },
+  };
+  return adjDescriptor;
+}
+
+class Printer {
+  message = 'Yo! THIS WORKS!!';
+
+  @Autobind
+  showMessage() {
+    console.log(this.message);
+  }
+}
+
+const p = new Printer();
+p.showMessage();
+
+const button = document.querySelector('button')!;
+// here in event listener, 'this' refers to the target of the event
+// because addEventListener in the end, binds 'this' in the function which is to be executed
+// to the target of the event
+// button.addEventListener('click', p.showMessage.bind(p));
+
+// Using decorator to bind
+button.addEventListener('click', p.showMessage);
