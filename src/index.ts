@@ -255,3 +255,108 @@ const button = document.querySelector('button')!;
 
 // Using decorator to bind
 button.addEventListener('click', p.showMessage);
+
+/* @ Decorator for Validation */
+// One common scenario we might encounter in some applications is that we fetched data,
+// lets say from a web resource and we get data where we guess  we've a couple of courses let's say but
+// we dont know for sure.
+// Or another possible scenario, We let users enter the data and we simply want to assign that data and
+// trade a new course with the user-entered data and we assumed it's right, but we're not guaranteed
+// that it's right and therefore we want to validate the input
+
+interface ValidatorConfig {
+  // using indexed type notation
+  [property: string]: {
+    [validatableProp: string]: string[]; // ['required', 'positive']
+  };
+}
+
+// registeredValidators initially is an empty object because initially when the apps starts,
+// when our third-party library gets loaded, no validators have been registered yet
+const registeredValidators: ValidatorConfig = {};
+
+// property decorator
+function Required(target: any, propName: string) {
+  // the prototype of the instance that we're working with will have a constructor key which
+  // points at the constructor function that was used to create our object and that therefore
+  // will basically be something like Course here, so the name of the contructor function in the end
+  // can be retrieved from the constructor because constructor is a function, we can use the name
+  // property which exists on any function in JavaScript to get the function name and this then will be
+  // the Course name here for example
+  // Now wre registered class name as a key in registeredValidators and the value for that is an object
+  registeredValidators[target.constructor.name] = {
+    // add existing validator before we add our new one
+    ...registeredValidators[target.constructor.name],
+    // dynamically assigned property, property which we want to add a validator as a key
+    [propName]: ['required'],
+  };
+}
+
+function PositiveNumber(target: any, propName: string) {
+  registeredValidators[target.constructor.name] = {
+    ...registeredValidators[target.constructor.name],
+    [propName]: ['positive'],
+  };
+}
+
+// So with that along with these what we added thus far (i.e @Required, @PositiveNumber), we registered
+// these properties and their validators in our global config when this class is defined
+
+// Validate function should go through all registered validators and basically run different logic
+// based on which validators it finds
+function validate(obj: any) {
+  // So here first of all, we want to retrieve the configuration for the concrete object we're dealing with
+  // For that we need to find out which constructor function the object is based on then get the
+  // validation config or the property validator mappings here which we set up for that object
+  // [obj.constructor.name] = we access the constructor property which exists on the prototype of the object
+  const objValidatorConfig = registeredValidators[obj.constructor.name];
+  if (!objValidatorConfig) {
+    return true;
+  }
+  let isValid = true;
+  for (const prop in objValidatorConfig) {
+    // console.log(prop);
+    for (const validator of objValidatorConfig[prop]) {
+      switch (validator) {
+        case 'required':
+          // !! - the double bang operator convert to real true or false value
+          isValid = isValid && !!obj[prop];
+          break;
+        case 'positive':
+          isValid = isValid && obj[prop] > 0;
+          break;
+      }
+    }
+  }
+  return isValid;
+}
+
+class Course {
+  @Required
+  title: string;
+  @PositiveNumber
+  price: number;
+
+  constructor(t: string, p: number) {
+    this.title = t;
+    this.price = p;
+  }
+}
+
+const courseForm = document.querySelector('form')!;
+courseForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const titleEl = document.getElementById('title') as HTMLInputElement;
+  const priceEl = document.getElementById('price') as HTMLInputElement;
+
+  const title = titleEl.value;
+  const price = +priceEl.value;
+
+  const createdCourse = new Course(title, price);
+
+  if (!validate(createdCourse)) {
+    alert('Invalid input, please try again');
+    return;
+  }
+  console.log(createdCourse);
+});

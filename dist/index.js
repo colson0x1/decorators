@@ -245,3 +245,78 @@ const button = document.querySelector('button');
 // button.addEventListener('click', p.showMessage.bind(p));
 // Using decorator to bind
 button.addEventListener('click', p.showMessage);
+// registeredValidators initially is an empty object because initially when the apps starts,
+// when our third-party library gets loaded, no validators have been registered yet
+const registeredValidators = {};
+// property decorator
+function Required(target, propName) {
+    // the prototype of the instance that we're working with will have a constructor key which
+    // points at the constructor function that was used to create our object and that therefore
+    // will basically be something like Course here, so the name of the contructor function in the end
+    // can be retrieved from the constructor because constructor is a function, we can use the name
+    // property which exists on any function in JavaScript to get the function name and this then will be
+    // the Course name here for example
+    // Now wre registered class name as a key in registeredValidators and the value for that is an object
+    registeredValidators[target.constructor.name] = Object.assign(Object.assign({}, registeredValidators[target.constructor.name]), { 
+        // dynamically assigned property, property which we want to add a validator as a key
+        [propName]: ['required'] });
+}
+function PositiveNumber(target, propName) {
+    registeredValidators[target.constructor.name] = Object.assign(Object.assign({}, registeredValidators[target.constructor.name]), { [propName]: ['positive'] });
+}
+// So with that along with these what we added thus far (i.e @Required, @PositiveNumber), we registered
+// these properties and their validators in our global config when this class is defined
+// Validate function should go through all registered validators and basically run different logic
+// based on which validators it finds
+function validate(obj) {
+    // So here first of all, we want to retrieve the configuration for the concrete object we're dealing with
+    // For that we need to find out which constructor function the object is based on then get the
+    // validation config or the property validator mappings here which we set up for that object
+    // [obj.constructor.name] = we access the constructor property which exists on the prototype of the object
+    const objValidatorConfig = registeredValidators[obj.constructor.name];
+    if (!objValidatorConfig) {
+        return true;
+    }
+    let isValid = true;
+    for (const prop in objValidatorConfig) {
+        // console.log(prop);
+        for (const validator of objValidatorConfig[prop]) {
+            switch (validator) {
+                case 'required':
+                    // !! - the double bang operator convert to real true or false value
+                    isValid = isValid && !!obj[prop];
+                    break;
+                case 'positive':
+                    isValid = isValid && obj[prop] > 0;
+                    break;
+            }
+        }
+    }
+    return isValid;
+}
+class Course {
+    constructor(t, p) {
+        this.title = t;
+        this.price = p;
+    }
+}
+__decorate([
+    Required
+], Course.prototype, "title", void 0);
+__decorate([
+    PositiveNumber
+], Course.prototype, "price", void 0);
+const courseForm = document.querySelector('form');
+courseForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const titleEl = document.getElementById('title');
+    const priceEl = document.getElementById('price');
+    const title = titleEl.value;
+    const price = +priceEl.value;
+    const createdCourse = new Course(title, price);
+    if (!validate(createdCourse)) {
+        alert('Invalid input, please try again');
+        return;
+    }
+    console.log(createdCourse);
+});
