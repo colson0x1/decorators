@@ -45,6 +45,8 @@ function Logger(logString) {
 // now this decorator will run when the class is instantiated
 // hence all of a sudden, we're able to add logic that doesn't run
 // when the class is defined but when the class is instantiated
+// This decorator will replace the class that its added to
+// with a new class that implements old class
 function WithTemplate(template, hookId) {
     // adding `_` on constructor argument of decorator signals TS that we get this
     // argument but we don't need it but we have to specify it though
@@ -141,6 +143,8 @@ function Log3(target, name, descriptor) {
     console.log(target);
     console.log(name);
     console.log(descriptor);
+    // returning new descriptor object in the end
+    return {};
 }
 // The last decorator we can add is to a parameter
 // the arguments it gets is, target, not the name of the parameter
