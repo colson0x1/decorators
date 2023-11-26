@@ -288,14 +288,20 @@ function Required(target: any, propName: string) {
     // add existing validator before we add our new one
     ...registeredValidators[target.constructor.name],
     // dynamically assigned property, property which we want to add a validator as a key
-    [propName]: ['required'],
+    [propName]: [
+      ...(registeredValidators[target.constructor.name]?.[propName] ?? []),
+      'required',
+    ],
   };
 }
 
 function PositiveNumber(target: any, propName: string) {
   registeredValidators[target.constructor.name] = {
     ...registeredValidators[target.constructor.name],
-    [propName]: ['positive'],
+    [propName]: [
+      ...(registeredValidators[target.constructor.name]?.[propName] ?? []),
+      'positive',
+    ],
   };
 }
 

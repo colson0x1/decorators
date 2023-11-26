@@ -250,6 +250,7 @@ button.addEventListener('click', p.showMessage);
 const registeredValidators = {};
 // property decorator
 function Required(target, propName) {
+    var _a, _b;
     // the prototype of the instance that we're working with will have a constructor key which
     // points at the constructor function that was used to create our object and that therefore
     // will basically be something like Course here, so the name of the contructor function in the end
@@ -259,10 +260,17 @@ function Required(target, propName) {
     // Now wre registered class name as a key in registeredValidators and the value for that is an object
     registeredValidators[target.constructor.name] = Object.assign(Object.assign({}, registeredValidators[target.constructor.name]), { 
         // dynamically assigned property, property which we want to add a validator as a key
-        [propName]: ['required'] });
+        [propName]: [
+            ...((_b = (_a = registeredValidators[target.constructor.name]) === null || _a === void 0 ? void 0 : _a[propName]) !== null && _b !== void 0 ? _b : []),
+            'required',
+        ] });
 }
 function PositiveNumber(target, propName) {
-    registeredValidators[target.constructor.name] = Object.assign(Object.assign({}, registeredValidators[target.constructor.name]), { [propName]: ['positive'] });
+    var _a, _b;
+    registeredValidators[target.constructor.name] = Object.assign(Object.assign({}, registeredValidators[target.constructor.name]), { [propName]: [
+            ...((_b = (_a = registeredValidators[target.constructor.name]) === null || _a === void 0 ? void 0 : _a[propName]) !== null && _b !== void 0 ? _b : []),
+            'positive',
+        ] });
 }
 // So with that along with these what we added thus far (i.e @Required, @PositiveNumber), we registered
 // these properties and their validators in our global config when this class is defined
