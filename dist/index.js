@@ -26,6 +26,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 function Logger(logString) {
     console.log('LOGGER FACTORY');
     return function (constructor) {
@@ -98,6 +101,40 @@ function Log(target, propertyName) {
     console.log('Property decorator!');
     console.log(target, propertyName);
 }
+// Besides properties, We can also add decorators to accessors
+// target is prototype if we're dealing with instance accessor
+// or target will be constructor function if we're dealing with static one
+// if we don't know, target will be of type any
+// arguments: target, name of the accessor and descriptor which
+// will be of type PropertyDescriptor (that's type builtin TS)
+function Log2(target, name, descriptor) {
+    console.log('Accessor decorator!');
+    console.log(target);
+    console.log(name);
+    console.log(descriptor);
+}
+// Besides properties and accessors, We can also add decorators to methods
+// Method decorators also receives three arguments
+// target: if instance method then prototype of the object else
+// it its a static method, then constructor function
+// target, name of the method, descriptor
+// here descriptor is little bit different since its method descriptor not an accessor descriptor
+function Log3(target, name, descriptor) {
+    console.log('Method decorator!');
+    console.log(target);
+    console.log(name);
+    console.log(descriptor);
+}
+// The last decorator we can add is to a parameter
+// the arguments it gets is, target, not the name of the parameter
+// but the name of the method in which we used this parameter,
+// and last argument is: position of the argument so the index of this argument
+function Log4(target, name, position) {
+    console.log('Parameter decorator!');
+    console.log(target);
+    console.log(name);
+    console.log(position);
+}
 class Product {
     set price(val) {
         if (val > 0) {
@@ -118,3 +155,10 @@ class Product {
 __decorate([
     Log
 ], Product.prototype, "title", void 0);
+__decorate([
+    Log2
+], Product.prototype, "price", null);
+__decorate([
+    Log3,
+    __param(0, Log4)
+], Product.prototype, "getPriceWithTax", null);
