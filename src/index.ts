@@ -35,18 +35,38 @@ function Logger(logString: string) {
 // expose to other developers because this Decorator is such a tool which other
 // developers have to use by adding it to a class
 
+// now this decorator will run when the class is instantiated
+// hence all of a sudden, we're able to add logic that doesn't run
+// when the class is defined but when the class is instantiated
 function WithTemplate(template: string, hookId: string) {
   // adding `_` on constructor argument of decorator signals TS that we get this
   // argument but we don't need it but we have to specify it though
   console.log('TEMPLATE FACTORY');
-  return function (constructor: any) {
-    console.log('Rendering template');
-    const hookEl = document.getElementById(hookId);
-    const p = new constructor();
-    if (hookEl) {
-      hookEl.innerHTML = template;
-      hookEl.querySelector('h1')!.textContent = p.name;
-    }
+  return function <T extends { new (...args: any[]): { name: string } }>(
+    originalConstructor: T,
+  ) {
+    // returning new class. class here is just syntactic sugar for
+    // constructor function. hence, returning constructor function in the end
+    // which is based on the original constructor function
+    return class extends originalConstructor {
+      // adding new constructor func
+      // doing this now the template should only be rendered to the DOM if
+      // we really instantiate our object here and not all the time when this
+      // decorator function is executed which happens as soon as we define class
+      constructor(..._: any[]) {
+        // calling original constructor function
+        // doing that saves original constucture. not required though
+        super();
+
+        console.log('Rendering template');
+        const hookEl = document.getElementById(hookId);
+        // const p = new originalConstructor();
+        if (hookEl) {
+          hookEl.innerHTML = template;
+          hookEl.querySelector('h1')!.textContent = this.name;
+        }
+      }
+    };
   };
 }
 
@@ -165,3 +185,18 @@ class Product {
     return this._price * (1 + tax);
   }
 }
+
+// Decorators executes when we define the class
+// Those are not decorators that run at run time when we call a
+// method or when we work with a property. That's now what they do instead
+// these decorators allows us to do additional behind the scenes set up work
+// when a class is defined. That's the idea of decorators, that's their core
+// use case
+// Decorator itself is just a function that executes when our class is defined,
+// when properties or method is therefore registered and so on!
+const p1 = new Product('Hoodie', 450);
+const p2 = new Product('Book', 39);
+
+/* @ Advanced usecase of Decorators */
+// Some decorators for example: class decorators and method decorators actually
+// are also capable of returning something
